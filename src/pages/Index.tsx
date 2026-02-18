@@ -3,8 +3,10 @@ import { Database, Zap } from 'lucide-react';
 import FileUploadZone from '@/components/FileUploadZone';
 import DataPreviewTable from '@/components/DataPreviewTable';
 import SqlOutputPanel from '@/components/SqlOutputPanel';
+import ColumnSelector from '@/components/ColumnSelector';
 import { parseExcelFile, type ParsedData } from '@/lib/excel-parser';
 import { generateSQL } from '@/lib/sql-generator';
+import { Switch } from '@/components/ui/switch';
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -13,8 +15,9 @@ const Index = () => {
   const [sql, setSql] = useState('');
   const [error, setError] = useState('');
   const [parsing, setParsing] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<boolean[]>([]);
+  const [includeCreateTable, setIncludeCreateTable] = useState(false);
 
-  /** Handle a new file selection: parse immediately */
   const handleFileSelect = useCallback(async (f: File) => {
     setFile(f);
     setError('');
@@ -23,6 +26,7 @@ const Index = () => {
     try {
       const data = await parseExcelFile(f);
       setParsedData(data);
+      setSelectedColumns(new Array(data.headers.length).fill(true));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse file.');
       setParsedData(null);
@@ -31,21 +35,39 @@ const Index = () => {
     }
   }, []);
 
-  /** Clear everything */
   const handleClear = useCallback(() => {
     setFile(null);
     setParsedData(null);
     setSql('');
     setError('');
     setTableName('');
+    setSelectedColumns([]);
+    setIncludeCreateTable(false);
   }, []);
 
-  /** Generate SQL from the parsed data */
+  const handleToggleColumn = useCallback((index: number) => {
+    setSelectedColumns((prev) => prev.map((v, i) => (i === index ? !v : v)));
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedColumns((prev) => prev.map(() => true));
+  }, []);
+
+  const handleDeselectAll = useCallback(() => {
+    setSelectedColumns((prev) => prev.map(() => false));
+  }, []);
+
   const handleConvert = useCallback(() => {
     if (!parsedData) return;
-    const result = generateSQL(tableName, parsedData.headers, parsedData.rows);
+    const result = generateSQL({
+      tableName,
+      headers: parsedData.headers,
+      rows: parsedData.rows,
+      selectedColumns,
+      includeCreateTable,
+    });
     setSql(result);
-  }, [parsedData, tableName]);
+  }, [parsedData, tableName, selectedColumns, includeCreateTable]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,34 +88,39 @@ const Index = () => {
 
       {/* Main content */}
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Upload zone */}
         <FileUploadZone
           onFileSelect={handleFileSelect}
           currentFile={file}
           onClear={handleClear}
         />
 
-        {/* Error message */}
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
-        {/* Parsing indicator */}
         {parsing && (
           <p className="text-center text-sm text-muted-foreground animate-pulse">
             Parsing file…
           </p>
         )}
 
-        {/* Data preview + controls */}
         {parsedData && (
           <>
             <DataPreviewTable data={parsedData} />
 
-            {/* Table name + convert */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            {/* Column selector */}
+            <ColumnSelector
+              headers={parsedData.headers}
+              selected={selectedColumns}
+              onToggle={handleToggleColumn}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
+            />
+
+            {/* Table name + options + convert */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-1.5">
                 <label
                   htmlFor="table-name"
@@ -110,9 +137,18 @@ const Index = () => {
                   className="w-full rounded-lg border border-input bg-card px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
+              <label className="flex items-center gap-2 pb-1">
+                <Switch
+                  checked={includeCreateTable}
+                  onCheckedChange={setIncludeCreateTable}
+                />
+                <span className="text-sm text-foreground whitespace-nowrap">
+                  CREATE TABLE
+                </span>
+              </label>
               <button
                 onClick={handleConvert}
-                disabled={!parsedData}
+                disabled={!parsedData || selectedColumns.every((s) => !s)}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
                 <Zap className="h-4 w-4" />
@@ -122,7 +158,6 @@ const Index = () => {
           </>
         )}
 
-        {/* SQL output */}
         {sql && <SqlOutputPanel sql={sql} tableName={tableName} />}
       </main>
     </div>
