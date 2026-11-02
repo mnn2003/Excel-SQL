@@ -7,6 +7,8 @@ import ColumnSelector from '@/components/ColumnSelector';
 import { parseExcelFile, type ParsedData } from '@/lib/excel-parser';
 import { generateSQL } from '@/lib/sql-generator';
 import { Switch } from '@/components/ui/switch';
+import SqlToExcelPanel from '@/components/SqlToExcelPanel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -87,7 +89,18 @@ const Index = () => {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+       <Tabs defaultValue="excel-to-sql" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
+          <TabsTrigger value="excel-to-sql">Excel → SQL</TabsTrigger>
+          <TabsTrigger value="sql-to-excel">SQL → Excel</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sql-to-excel">
+          <SqlToExcelPanel />
+        </TabsContent>
+
+        <TabsContent value="excel-to-sql" className="space-y-6">
         <FileUploadZone
           onFileSelect={handleFileSelect}
           currentFile={file}
@@ -159,6 +172,8 @@ const Index = () => {
         )}
 
         {sql && <SqlOutputPanel sql={sql} tableName={tableName} />}
+        </TabsContent>
+       </Tabs>
       </main>
     </div>
   );
