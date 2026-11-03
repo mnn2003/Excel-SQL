@@ -5,8 +5,8 @@ import { parseSqlInserts, type ParsedSql } from '@/lib/sql-parser';
 
 const SAMPLE = `INSERT INTO students (name, email, age)
 VALUES
-('John Doe','john@email.com',21),
-('Jane Doe','jane@email.com',22);`;
+('Aman Kumar','akt@email.com',21),
+('Aman Tiwari','aman20@email.com',22);`;
 
 /** Converts pasted SQL INSERT statements back into a downloadable spreadsheet */
 const SqlToExcelPanel = () => {
