@@ -9,6 +9,7 @@ import { generateSQL } from '@/lib/sql-generator';
 import { Switch } from '@/components/ui/switch';
 import SqlToExcelPanel from '@/components/SqlToExcelPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DatabaseBrowserPanel from '@/components/DatabaseBrowserPanel';
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -75,29 +76,34 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-5 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-5 sm:px-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Database className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">Excel → SQL</h1>
             <p className="text-xs text-muted-foreground">
-              Convert spreadsheets to INSERT statements
+              Spreadsheet converters & database browser
             </p>
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
        <Tabs defaultValue="excel-to-sql" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
+        <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
           <TabsTrigger value="excel-to-sql">Excel → SQL</TabsTrigger>
           <TabsTrigger value="sql-to-excel">SQL → Excel</TabsTrigger>
+          <TabsTrigger value="database-browser">Database Browser</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sql-to-excel">
           <SqlToExcelPanel />
+        </TabsContent>
+
+        <TabsContent value="database-browser">
+          <DatabaseBrowserPanel />
         </TabsContent>
 
         <TabsContent value="excel-to-sql" className="space-y-6">
